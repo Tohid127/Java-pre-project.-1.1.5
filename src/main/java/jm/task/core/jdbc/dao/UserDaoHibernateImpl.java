@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -26,6 +27,8 @@ public class UserDaoHibernateImpl implements UserDao {
                     "lastName VARCHAR(255)," +
                     "age INT)").executeUpdate();
             session.getTransaction().commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -36,7 +39,6 @@ public class UserDaoHibernateImpl implements UserDao {
             session.createSQLQuery("DROP TABLE IF EXISTS users").executeUpdate();
             session.getTransaction().commit();
         }
-
     }
 
     @Override
@@ -45,23 +47,37 @@ public class UserDaoHibernateImpl implements UserDao {
             User user = new User(name, lastName, age);
             session.beginTransaction();
             session.save(user);
-            System.out.println("User с именем - " + name + " добавлен в базу данных");
+            System.out.printf("User с именем - %s добавлен в базу данных\n", name);
             session.getTransaction().commit();
         }
     }
 
     @Override
     public void removeUserById(long id) {
-
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+            session.createQuery("delete User where id = id").executeUpdate();
+            session.getTransaction().commit();
+        }
     }
 
     @Override
     public List<User> getAllUsers() {
-        return null;
+        List<User> usersList = new ArrayList<>();
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+            usersList = session.createQuery("from User").getResultList();
+            session.getTransaction().commit();
+        }
+        return usersList;
     }
 
     @Override
     public void cleanUsersTable() {
-
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+            session.createSQLQuery("TRUNCATE TABLE users").executeUpdate();
+            session.getTransaction().commit();
+        }
     }
 }
